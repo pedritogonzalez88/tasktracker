@@ -1,0 +1,12 @@
+{
+  "name": "tasktracker",
+  "compatibility_date": "2024-04-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "dist",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "NODE_ENV": "production"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "A project enclosing multiple tasks",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Completed", "On Hold"] },
+        "color": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["title", "ownerId", "createdAt", "updatedAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task in the TaskTracker app",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "status": { "type": "string", "enum": ["In Progress", "Completed", "Scheduled"] },
+        "timeSpent": { "type": "string" },
+        "date": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["title", "ownerId", "createdAt", "updatedAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with extra settings",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["firstName", "lastName", "updatedAt"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "A quick note",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "labels": { "type": "array", "items": { "type": "string" } },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["title", "ownerId", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "projects": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "User projects"
+    },
+    "tasks": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "All user tasks"
+    },
+    "notes": {
+      "schema": { "$ref": "#/entities/Note" },
+      "description": "All user notes"
+    },
+    "users": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles data"
+    }
+  }
+}

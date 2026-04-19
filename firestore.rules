@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    
+    function isValidProject(data) {
+      return data.keys().hasAll(['title', 'ownerId', 'createdAt', 'updatedAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.ownerId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 50)) &&
+             (!('color' in data) || (data.color is string && data.color.size() <= 20));
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['title', 'ownerId', 'createdAt', 'updatedAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.ownerId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (!('priority' in data) || (data.priority is string && data.priority.size() <= 50)) &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 50)) &&
+             (!('timeSpent' in data) || (data.timeSpent is string && data.timeSpent.size() <= 50)) &&
+             (!('date' in data) || (data.date is string && data.date.size() <= 50)) &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100));
+    }
+
+    function isValidNote(data) {
+      return data.keys().hasAll(['title', 'ownerId', 'createdAt', 'updatedAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.ownerId == request.auth.uid &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (!('content' in data) || (data.content is string && data.content.size() <= 10000)) &&
+             (!('labels' in data) || (data.labels is list && data.labels.size() <= 20));
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['firstName', 'lastName', 'updatedAt']) &&
+             data.firstName is string && data.firstName.size() <= 100 &&
+             data.lastName is string && data.lastName.size() <= 100 &&
+             data.updatedAt is timestamp &&
+             (!('address' in data) || (data.address is string && data.address.size() <= 200)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+             (!('tier' in data) || (data.tier is string && data.tier in ['free', 'plus', 'pro']));
+    }
+
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && isValidId(projectId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                    isValidId(projectId) && 
+                    isValidProject(incoming()) && 
+                    incoming().createdAt == request.time && 
+                    incoming().updatedAt == request.time;
+                    
+      allow update: if (
+                      isSignedIn() && 
+                      isValidId(projectId) && 
+                      existing().ownerId == request.auth.uid &&
+                      isValidProject(incoming()) &&
+                      incoming().ownerId == existing().ownerId &&
+                      incoming().createdAt == existing().createdAt &&
+                      incoming().updatedAt == request.time &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'status', 'color', 'updatedAt'])
+                    );
+
+      allow delete: if isSignedIn() && isValidId(projectId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /tasks/{taskId} {
+      allow get: if isSignedIn() && isValidId(taskId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                    isValidId(taskId) && 
+                    isValidTask(incoming()) && 
+                    incoming().createdAt == request.time && 
+                    incoming().updatedAt == request.time;
+                    
+      allow update: if (
+                      isSignedIn() && 
+                      isValidId(taskId) && 
+                      existing().ownerId == request.auth.uid &&
+                      isValidTask(incoming()) &&
+                      incoming().ownerId == existing().ownerId &&
+                      incoming().createdAt == existing().createdAt &&
+                      incoming().updatedAt == request.time &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['title', 'priority', 'status', 'timeSpent', 'date', 'category', 'updatedAt'])
+                    );
+
+      allow delete: if isSignedIn() && isValidId(taskId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /notes/{noteId} {
+      allow get: if isSignedIn() && isValidId(noteId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                    isValidId(noteId) && 
+                    isValidNote(incoming()) && 
+                    incoming().createdAt == request.time && 
+                    incoming().updatedAt == request.time;
+                    
+      allow update: if (
+                      isSignedIn() && 
+                      isValidId(noteId) && 
+                      existing().ownerId == request.auth.uid &&
+                      isValidNote(incoming()) &&
+                      incoming().ownerId == existing().ownerId &&
+                      incoming().createdAt == existing().createdAt &&
+                      incoming().updatedAt == request.time &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'labels', 'updatedAt'])
+                    );
+
+      allow delete: if isSignedIn() && isValidId(noteId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && 
+                    userId == request.auth.uid &&
+                    isValidUserProfile(incoming()) &&
+                    (!('tier' in incoming()) || incoming().tier == 'free') &&
+                    incoming().updatedAt == request.time;
+                    
+      allow update: if isSignedIn() && 
+                    userId == request.auth.uid &&
+                    isValidUserProfile(incoming()) &&
+                    incoming().updatedAt == request.time &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['firstName', 'lastName', 'address', 'phone', 'updatedAt', 'tier']);
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "TaskTracker",
+  "description": "Task management dashboard with calendar, analytics, and notes using Firebase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
